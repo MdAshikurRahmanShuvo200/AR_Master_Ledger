@@ -17,9 +17,11 @@ Public Class frmReportViewer
             ' 1. Create Report Document Instance
             Dim rptDoc As New ReportDocument()
 
-            ' 2. Specify Report File Path
-            Dim reportPath As String = "C:\Users\ASUS\source\repos\AR_Master_Ledger\AR_Master_Ledger\Revised Customer_Ledger_Template_v2.rpt"
+            ' Get the absolute path of the report from the application's startup directory (bin/Debug or bin/Release)
+            Dim reportPath As String = IO.Path.Combine(Application.StartupPath, "Revised Customer_Ledger_Template_v2.rpt")
 
+            ' Load the Crystal Report file dynamically using the generated path
+            rptDoc.Load(reportPath)
             ' 3. Load the Report
             rptDoc.Load(reportPath)
 
