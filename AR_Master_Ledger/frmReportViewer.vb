@@ -3,7 +3,7 @@ Imports CrystalDecisions.Shared
 
 Public Class frmReportViewer
 
-    ' Form1 থেকে পাওয়া মানগুলো রাখার জন্য Variables
+    ' Variables to store values passed from Form1
     Public FromDate As Date
     Public ToDate As Date
     Public FromCustomerId As String
@@ -17,12 +17,31 @@ Public Class frmReportViewer
             ' 1. Create Report Document Instance
             Dim rptDoc As New ReportDocument()
 
-            ' Get the absolute path of the report from the application's startup directory (bin/Debug or bin/Release)
-            Dim reportPath As String = IO.Path.Combine(Application.StartupPath, "Revised Customer_Ledger_Template_v2.rpt")
+            ' 2. Dynamically check and locate the Crystal Report file
+            Dim reportFileName As String = "Revised Customer_Ledger_Template_v2.rpt"
 
-            ' Load the Crystal Report file dynamically using the generated path
-            rptDoc.Load(reportPath)
-            ' 3. Load the Report
+            ' Path A: Right inside the startup folder (bin\Debug or bin\Release)
+            Dim reportPath As String = IO.Path.Combine(Application.StartupPath, reportFileName)
+
+            ' Path B: If running from VS Debug mode (stepping up 2 folders to root)
+            If Not IO.File.Exists(reportPath) Then
+                reportPath = IO.Path.Combine(Application.StartupPath, "..", "..", "Reports", reportFileName)
+            End If
+
+            ' Path C: In case of deeply nested folder structure (stepping up 3 folders)
+            If Not IO.File.Exists(reportPath) Then
+                reportPath = IO.Path.Combine(Application.StartupPath, "..", "..", "..", "Reports", reportFileName)
+            End If
+
+            ' If still not found anywhere, show a precise path error and exit gracefully
+            If Not IO.File.Exists(reportPath) Then
+                MessageBox.Show("Crystal Report file not found!" & vbCrLf &
+                                "Please make sure '" & reportFileName & "' is inside the 'Reports' folder or bin\Debug folder.",
+                                "Path Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Exit Sub
+            End If
+
+            ' 3. Load the Report Safely (Only Once)
             rptDoc.Load(reportPath)
 
             ' 4. Pass Database Credentials (SQL Server Logins)
@@ -43,14 +62,16 @@ Public Class frmReportViewer
             ' 5. Pass Parameters EXACTLY matching Crystal Report Parameter Names
             rptDoc.SetParameterValue("FromDate", FromDate)
             rptDoc.SetParameterValue("ToDate", ToDate)
-            rptDoc.SetParameterValue("FromCustomerId", FromCustomerId)
-            rptDoc.SetParameterValue("ToCustomerId", ToCustomerId)
-            rptDoc.SetParameterValue("FromAccSet", FromAccSet)
-            rptDoc.SetParameterValue("ToAccSet", ToAccSet)
-
-            ' === এই লাইনটি বাদ পড়েছিল, যা এখন যোগ করা হয়েছে ===
+            rptDoc.SetParameterValue("FromCustomerId", If(String.IsNullOrEmpty(FromCustomerId), "", FromCustomerId))
+            rptDoc.SetParameterValue("ToCustomerId", If(String.IsNullOrEmpty(ToCustomerId), "ZZZZZZZZZZ", ToCustomerId))
+            rptDoc.SetParameterValue("FromAccSet", If(String.IsNullOrEmpty(FromAccSet), "", FromAccSet))
+            rptDoc.SetParameterValue("ToAccSet", If(String.IsNullOrEmpty(ToAccSet), "ZZZZZZZZZZ", ToAccSet))
             rptDoc.SetParameterValue("ShowDetails", Me.ShowDetails)
 
+            ' Hide side parameter panel to avoid user prompt interactions
+            CrystalReportViewer1.ShowParameterPanelButton = False
+            ' Force Crystal Report Viewer to reuse already provided parameter values
+            CrystalReportViewer1.ReuseParameterValuesOnRefresh = True
             ' 6. Assign to ReportViewer control ONLY AFTER setting parameters and logon info
             CrystalReportViewer1.ReportSource = rptDoc
             CrystalReportViewer1.RefreshReport()
