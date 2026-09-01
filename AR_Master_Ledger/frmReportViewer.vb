@@ -62,12 +62,23 @@ Public Class frmReportViewer
             ' 5. Pass Parameters EXACTLY matching Crystal Report Parameter Names
             rptDoc.SetParameterValue("FromDate", FromDate)
             rptDoc.SetParameterValue("ToDate", ToDate)
+<<<<<<< HEAD
+            rptDoc.SetParameterValue("FromCustomerId", If(String.IsNullOrEmpty(FromCustomerId), "", FromCustomerId))
+            rptDoc.SetParameterValue("ToCustomerId", If(String.IsNullOrEmpty(ToCustomerId), "ZZZZZZZZZZ", ToCustomerId))
+            rptDoc.SetParameterValue("FromAccSet", If(String.IsNullOrEmpty(FromAccSet), "", FromAccSet))
+            rptDoc.SetParameterValue("ToAccSet", If(String.IsNullOrEmpty(ToAccSet), "ZZZZZZZZZZ", ToAccSet))
+=======
             rptDoc.SetParameterValue("FromCustomerId", FromCustomerId)
             rptDoc.SetParameterValue("ToCustomerId", ToCustomerId)
             rptDoc.SetParameterValue("FromAccSet", FromAccSet)
             rptDoc.SetParameterValue("ToAccSet", ToAccSet)
+>>>>>>> 61d3c22c1f93f6322d438cbd4b5cb2ae36eaa571
             rptDoc.SetParameterValue("ShowDetails", Me.ShowDetails)
 
+            ' Hide side parameter panel to avoid user prompt interactions
+            CrystalReportViewer1.ShowParameterPanelButton = False
+            ' Force Crystal Report Viewer to reuse already provided parameter values
+            CrystalReportViewer1.ReuseParameterValuesOnRefresh = True
             ' 6. Assign to ReportViewer control ONLY AFTER setting parameters and logon info
             CrystalReportViewer1.ReportSource = rptDoc
             CrystalReportViewer1.RefreshReport()
